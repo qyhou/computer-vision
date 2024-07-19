@@ -120,16 +120,12 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.conv_1(x)
-        x = self.conv_2(x)
-        c2 = x
-        x = self.conv_3(x)
-        c3 = x
-        x = self.conv_4(x)
-        c4 = x
-        x = self.conv_5(x)
-        c5 = x
+        c2 = self.conv_2(x)
+        c3 = self.conv_3(c2)
+        c4 = self.conv_4(c3)
+        c5 = self.conv_5(c4)
 
-        # x = self.avg_pooling(x)
+        # x = self.avg_pooling(c5)
         # x = torch.flatten(x, 1)
         # x = self.fc(x)
 
@@ -154,10 +150,6 @@ def resnet_101(in_channels=3, channel_ratio=1.0):
 
 def resnet_152(in_channels=3, channel_ratio=1.0):
     return ResNet(BottleneckBlock, [3, 8, 36, 3], in_channels=in_channels, channel_ratio=channel_ratio)
-
-
-def resnet_10(in_channels=3, channel_ratio=1.0):
-    return ResNet(BasicBlock, [1, 1, 1, 1], in_channels=in_channels, channel_ratio=channel_ratio)
 
 
 if __name__ == '__main__':
