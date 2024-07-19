@@ -56,7 +56,7 @@ class UpSamplingBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, in_channels=3, classes=10, up_sampling_mode='transpose', channel_ratio=1.0):
+    def __init__(self, classes=10, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0):
         super().__init__()
         self.down_sampling = nn.MaxPool2d(kernel_size=2, stride=2)
         self.left_layer_1 = ConvBlock(in_channels, make_divisible(64 * channel_ratio))
@@ -102,5 +102,5 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
-    model = UNet(in_channels=3, classes=10, up_sampling_mode='transpose', channel_ratio=1.0)
+    model = UNet(classes=10, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0)
     out_data = model(in_data)
