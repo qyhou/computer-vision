@@ -13,3 +13,6 @@ models specific to Computer Vision
 ### segmentation
 - [U-Net](models/segmentation/unet.py)
   - [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597), (University of Freiburg), MICCAI-2015
+- [UNet++](models/segmentation/unetpp.py)
+  - [UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://arxiv.org/abs/1807.10165), (Arizona State University), DLMIA-2018
+  - [UNet++: Redesigning Skip Connections to Exploit Multiscale Features in Image Segmentation](https://arxiv.org/abs/1912.05074), (Arizona State University), Journal
