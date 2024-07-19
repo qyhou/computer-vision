@@ -11,7 +11,7 @@ def make_divisible(value, divisor=8, min_value=None, min_ratio=0.9):
     return new_value
 
 
-class DoubleConv(nn.Module):
+class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.relu = nn.ReLU(inplace=True)
@@ -28,71 +28,72 @@ class DoubleConv(nn.Module):
         return x
 
 
+class UpSamplingBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, up_sampling_mode='transpose'):
+        super().__init__()
+        if up_sampling_mode == 'transpose':
+            self.up_sampling = nn.Sequential(
+                nn.ConvTranspose2d(in_channels, out_channels,
+                                   kernel_size=2, stride=2, padding=0, bias=False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True)
+            )
+        else:
+            if in_channels == out_channels:
+                self.up_sampling = nn.Upsample(scale_factor=2, mode=up_sampling_mode, align_corners=True)
+            else:
+                self.up_sampling = nn.Sequential(
+                    nn.Upsample(scale_factor=2, mode=up_sampling_mode, align_corners=True),
+                    nn.Conv2d(in_channels, out_channels,
+                              kernel_size=1, stride=1, padding=0, bias=False),
+                    nn.BatchNorm2d(out_channels),
+                    nn.ReLU(inplace=True)
+                )
+
+    def forward(self, x):
+        x = self.up_sampling(x)
+        return x
+
+
 class UNet(nn.Module):
-    def __init__(self, in_channels=3, classes=10, channel_ratio=1.0):
+    def __init__(self, in_channels=3, classes=10, up_sampling_mode='transpose', channel_ratio=1.0):
         super().__init__()
         self.down_sampling = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.left_layer_1 = DoubleConv(in_channels, make_divisible(64 * channel_ratio))
-        self.left_layer_2 = DoubleConv(make_divisible(64 * channel_ratio), make_divisible(128 * channel_ratio))
-        self.left_layer_3 = DoubleConv(make_divisible(128 * channel_ratio), make_divisible(256 * channel_ratio))
-        self.left_layer_4 = DoubleConv(make_divisible(256 * channel_ratio), make_divisible(512 * channel_ratio))
+        self.left_layer_1 = ConvBlock(in_channels, make_divisible(64 * channel_ratio))
+        self.left_layer_2 = ConvBlock(make_divisible(64 * channel_ratio), make_divisible(128 * channel_ratio))
+        self.left_layer_3 = ConvBlock(make_divisible(128 * channel_ratio), make_divisible(256 * channel_ratio))
+        self.left_layer_4 = ConvBlock(make_divisible(256 * channel_ratio), make_divisible(512 * channel_ratio))
 
-        self.middle_layer = DoubleConv(make_divisible(512 * channel_ratio), make_divisible(1024 * channel_ratio))
+        self.middle_layer = ConvBlock(make_divisible(512 * channel_ratio), make_divisible(1024 * channel_ratio))
 
-        self.up_sampling_1 = nn.ConvTranspose2d(
-            make_divisible(1024 * channel_ratio), make_divisible(512 * channel_ratio),
-            kernel_size=2, stride=2, padding=0)
-        self.right_layer_1 = DoubleConv(make_divisible(1024 * channel_ratio), make_divisible(512 * channel_ratio))
-        self.up_sampling_2 = nn.ConvTranspose2d(
-            make_divisible(512 * channel_ratio), make_divisible(256 * channel_ratio),
-            kernel_size=2, stride=2, padding=0)
-        self.right_layer_2 = DoubleConv(make_divisible(512 * channel_ratio), make_divisible(256 * channel_ratio))
-        self.up_sampling_3 = nn.ConvTranspose2d(
-            make_divisible(256 * channel_ratio), make_divisible(128 * channel_ratio),
-            kernel_size=2, stride=2, padding=0)
-        self.right_layer_3 = DoubleConv(make_divisible(256 * channel_ratio), make_divisible(128 * channel_ratio))
-        self.up_sampling_4 = nn.ConvTranspose2d(
-            make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio),
-            kernel_size=2, stride=2, padding=0)
-        self.right_layer_4 = DoubleConv(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio))
+        self.up_sampling_1 = UpSamplingBlock(make_divisible(1024 * channel_ratio), make_divisible(512 * channel_ratio),
+                                             up_sampling_mode)
+        self.right_layer_1 = ConvBlock(make_divisible(1024 * channel_ratio), make_divisible(512 * channel_ratio))
+        self.up_sampling_2 = UpSamplingBlock(make_divisible(512 * channel_ratio), make_divisible(256 * channel_ratio),
+                                             up_sampling_mode)
+        self.right_layer_2 = ConvBlock(make_divisible(512 * channel_ratio), make_divisible(256 * channel_ratio))
+        self.up_sampling_3 = UpSamplingBlock(make_divisible(256 * channel_ratio), make_divisible(128 * channel_ratio),
+                                             up_sampling_mode)
+        self.right_layer_3 = ConvBlock(make_divisible(256 * channel_ratio), make_divisible(128 * channel_ratio))
+        self.up_sampling_4 = UpSamplingBlock(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio),
+                                             up_sampling_mode)
+        self.right_layer_4 = ConvBlock(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio))
 
         self.final_layer = nn.Conv2d(make_divisible(64 * channel_ratio), classes,
                                      kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-        x = self.left_layer_1(x)
-        left_1 = x
+        left_1 = self.left_layer_1(x)
+        left_2 = self.left_layer_2(self.down_sampling(left_1))
+        left_3 = self.left_layer_3(self.down_sampling(left_2))
+        left_4 = self.left_layer_4(self.down_sampling(left_3))
 
-        x = self.down_sampling(x)
-        x = self.left_layer_2(x)
-        left_2 = x
+        x = self.middle_layer(self.down_sampling(left_4))
 
-        x = self.down_sampling(x)
-        x = self.left_layer_3(x)
-        left_3 = x
-
-        x = self.down_sampling(x)
-        x = self.left_layer_4(x)
-        left_4 = x
-
-        x = self.down_sampling(x)
-        x = self.middle_layer(x)
-
-        x = self.up_sampling_1(x)
-        x = torch.cat((x, left_4), dim=1)
-        x = self.right_layer_1(x)
-
-        x = self.up_sampling_2(x)
-        x = torch.cat((x, left_3), dim=1)
-        x = self.right_layer_2(x)
-
-        x = self.up_sampling_3(x)
-        x = torch.cat((x, left_2), dim=1)
-        x = self.right_layer_3(x)
-
-        x = self.up_sampling_4(x)
-        x = torch.cat((x, left_1), dim=1)
-        x = self.right_layer_4(x)
+        x = self.right_layer_1(torch.cat((self.up_sampling_1(x), left_4), dim=1))
+        x = self.right_layer_2(torch.cat((self.up_sampling_2(x), left_3), dim=1))
+        x = self.right_layer_3(torch.cat((self.up_sampling_3(x), left_2), dim=1))
+        x = self.right_layer_4(torch.cat((self.up_sampling_4(x), left_1), dim=1))
 
         x = self.final_layer(x)
 
@@ -101,5 +102,5 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
-    model = UNet(in_channels=3, classes=10, channel_ratio=1.0)
+    model = UNet(in_channels=3, classes=10, up_sampling_mode='transpose', channel_ratio=1.0)
     out_data = model(in_data)
