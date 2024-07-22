@@ -29,13 +29,13 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_channels, out_channels, pool_size=None, up_scale=None):
+    def __init__(self, in_channels, out_channels, down=None, up=None):
         super().__init__()
         layers = []
-        if pool_size:
-            layers.append(nn.MaxPool2d(kernel_size=pool_size, stride=pool_size))
-        elif up_scale:
-            layers.append(nn.Upsample(scale_factor=up_scale, mode='bilinear'))
+        if down:
+            layers.append(nn.MaxPool2d(kernel_size=down, stride=down))
+        elif up:
+            layers.append(nn.Upsample(scale_factor=up, mode='bilinear'))
         layers.extend([
             nn.Conv2d(in_channels, out_channels,
                       kernel_size=3, stride=1, padding=1, bias=False),
@@ -59,33 +59,32 @@ class UNet3P(nn.Module):
         self.encoder_4 = Encoder(make_divisible(256 * channel_ratio), make_divisible(512 * channel_ratio))
         self.encoder_5 = Encoder(make_divisible(512 * channel_ratio), make_divisible(1024 * channel_ratio))
 
-        self.decoder_4_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=8)
-        self.decoder_4_2 = Decoder(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=4)
-        self.decoder_4_3 = Decoder(make_divisible(256 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=2)
+        self.decoder_4_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), down=8)
+        self.decoder_4_2 = Decoder(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio), down=4)
+        self.decoder_4_3 = Decoder(make_divisible(256 * channel_ratio), make_divisible(64 * channel_ratio), down=2)
         self.decoder_4_4 = Decoder(make_divisible(512 * channel_ratio), make_divisible(64 * channel_ratio))
-        self.decoder_4_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=2)
+        self.decoder_4_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up=2)
         self.decoder_4_fusion = Decoder(make_divisible(320 * channel_ratio), make_divisible(320 * channel_ratio))
 
-        self.decoder_3_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=4)
-        self.decoder_3_2 = Decoder(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=2)
+        self.decoder_3_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), down=4)
+        self.decoder_3_2 = Decoder(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio), down=2)
         self.decoder_3_3 = Decoder(make_divisible(256 * channel_ratio), make_divisible(64 * channel_ratio))
-        self.decoder_3_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=2)
-        self.decoder_3_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=4)
+        self.decoder_3_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=2)
+        self.decoder_3_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up=4)
         self.decoder_3_fusion = Decoder(make_divisible(320 * channel_ratio), make_divisible(320 * channel_ratio))
 
-        self.decoder_2_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), pool_size=2)
+        self.decoder_2_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio), down=2)
         self.decoder_2_2 = Decoder(make_divisible(128 * channel_ratio), make_divisible(64 * channel_ratio))
-        self.decoder_2_3 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=2)
-        self.decoder_2_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=4)
-        self.decoder_2_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=8)
+        self.decoder_2_3 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=2)
+        self.decoder_2_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=4)
+        self.decoder_2_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up=8)
         self.decoder_2_fusion = Decoder(make_divisible(320 * channel_ratio), make_divisible(320 * channel_ratio))
 
         self.decoder_1_1 = Decoder(make_divisible(64 * channel_ratio), make_divisible(64 * channel_ratio))
-        self.decoder_1_2 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=2)
-        self.decoder_1_3 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=4)
-        self.decoder_1_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=8)
-        self.decoder_1_5 = Decoder(
-            make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up_scale=16)
+        self.decoder_1_2 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=2)
+        self.decoder_1_3 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=4)
+        self.decoder_1_4 = Decoder(make_divisible(320 * channel_ratio), make_divisible(64 * channel_ratio), up=8)
+        self.decoder_1_5 = Decoder(make_divisible(1024 * channel_ratio), make_divisible(64 * channel_ratio), up=16)
         self.decoder_1_fusion = Decoder(make_divisible(320 * channel_ratio), make_divisible(320 * channel_ratio))
 
         self.final_layer_5 = nn.Sequential(
