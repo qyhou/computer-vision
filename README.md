@@ -16,3 +16,5 @@ models specific to Computer Vision
 - [UNet++](models/segmentation/unetpp.py)
   - [UNet++: A Nested U-Net Architecture for Medical Image Segmentation](https://arxiv.org/abs/1807.10165), (Arizona State University), DLMIA-2018
   - [UNet++: Redesigning Skip Connections to Exploit Multiscale Features in Image Segmentation](https://arxiv.org/abs/1912.05074), (Arizona State University), Journal
+- [UNet 3+](models/segmentation/unet3p.py)
+  - [UNet 3+: A Full-Scale Connected UNet for Medical Image Segmentation](https://arxiv.org/abs/2004.08790), (Zhejiang University, Sir Run Run Shaw Hospital, Ritsumeikan University, Zhejiang Lab), ICASSP-2020

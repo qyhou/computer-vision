@@ -40,10 +40,10 @@ class UpSamplingBlock(nn.Module):
             )
         else:
             if in_channels == out_channels:
-                self.up_sampling = nn.Upsample(scale_factor=2, mode=up_sampling_mode, align_corners=True)
+                self.up_sampling = nn.Upsample(scale_factor=2, mode=up_sampling_mode)
             else:
                 self.up_sampling = nn.Sequential(
-                    nn.Upsample(scale_factor=2, mode=up_sampling_mode, align_corners=True),
+                    nn.Upsample(scale_factor=2, mode=up_sampling_mode),
                     nn.Conv2d(in_channels, out_channels,
                               kernel_size=1, stride=1, padding=0, bias=False),
                     nn.BatchNorm2d(out_channels),
