@@ -186,4 +186,4 @@ class UNet3P(nn.Module):
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
     model = UNet3P(classes=10, in_channels=3, channel_ratio=1.0)
-    out_data = model(in_data)
+    out_data_5, out_data_4, out_data_3, out_data_2, out_data_1 = model(in_data)

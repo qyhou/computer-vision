@@ -74,7 +74,7 @@ class BottleneckBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, in_channels=3, channel_ratio=1.0):
+    def __init__(self, block, layers, classes=1000, in_channels=3, channel_ratio=1.0):
         super().__init__()
         self.in_channels = make_divisible(64 * channel_ratio)
 
@@ -100,8 +100,8 @@ class ResNet(nn.Module):
         self.conv_4 = self._make_layer(block, make_divisible(256 * channel_ratio), layers[2], stride=2)
         self.conv_5 = self._make_layer(block, make_divisible(512 * channel_ratio), layers[3], stride=2)
 
-        # self.avg_pooling = nn.AdaptiveAvgPool2d(1)
-        # self.fc = nn.Linear(make_divisible(512 * channel_ratio) * block.expansion, 1000)
+        self.avg_pooling = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(make_divisible(512 * channel_ratio) * block.expansion, classes)
 
     def _make_layer(self, block, out_channels, blocks, stride=1):
         down_sampling = None
@@ -120,39 +120,49 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.conv_1(x)
-        c2 = self.conv_2(x)
-        c3 = self.conv_3(c2)
-        c4 = self.conv_4(c3)
-        c5 = self.conv_5(c4)
+        x = self.conv_2(x)
+        x = self.conv_3(x)
+        x = self.conv_4(x)
+        x = self.conv_5(x)
 
-        # x = self.avg_pooling(c5)
-        # x = torch.flatten(x, 1)
-        # x = self.fc(x)
+        x = self.avg_pooling(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
 
-        return c5, c4, c3, c2
-
-
-def resnet_18(in_channels=3, channel_ratio=1.0):
-    return ResNet(BasicBlock, [2, 2, 2, 2], in_channels=in_channels, channel_ratio=channel_ratio)
+        return x
 
 
-def resnet_34(in_channels=3, channel_ratio=1.0):
-    return ResNet(BasicBlock, [3, 4, 6, 3], in_channels=in_channels, channel_ratio=channel_ratio)
+def resnet_18(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BasicBlock, [2, 2, 2, 2],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
 
 
-def resnet_50(in_channels=3, channel_ratio=1.0):
-    return ResNet(BottleneckBlock, [3, 4, 6, 3], in_channels=in_channels, channel_ratio=channel_ratio)
+def resnet_34(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BasicBlock, [3, 4, 6, 3],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
 
 
-def resnet_101(in_channels=3, channel_ratio=1.0):
-    return ResNet(BottleneckBlock, [3, 4, 23, 3], in_channels=in_channels, channel_ratio=channel_ratio)
+def resnet_50(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BottleneckBlock, [3, 4, 6, 3],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
 
 
-def resnet_152(in_channels=3, channel_ratio=1.0):
-    return ResNet(BottleneckBlock, [3, 8, 36, 3], in_channels=in_channels, channel_ratio=channel_ratio)
+def resnet_101(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BottleneckBlock, [3, 4, 23, 3],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
+
+
+def resnet_152(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BottleneckBlock, [3, 8, 36, 3],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
+
+
+def resnet_10(classes=1000, in_channels=3, channel_ratio=1.0):
+    return ResNet(BasicBlock, [1, 1, 1, 1],
+                  classes=classes, in_channels=in_channels, channel_ratio=channel_ratio)
 
 
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
-    model = resnet_18(in_channels=3, channel_ratio=1.0)
-    out_data_c5, out_data_c4, out_data_c3, out_data_c2 = model(in_data)
+    model = resnet_18(classes=1000, in_channels=3, channel_ratio=1.0)
+    out_data = model(in_data)
