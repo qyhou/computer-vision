@@ -1,11 +1,18 @@
 # computer-vision
-models specific to Computer Vision
+This repository provides implementations of various computer vision models using PyTorch.
+
+The code is designed to be as independent as possible without using complex inheritance, making it easy to read and use.
+
+Also, note that this repository is used for study and research and is not packaged or engineered for production.
+
+Additionally, aspects beyond the core model structures, 
+such as weight initialization (which may be important for seq2seq models), are not included.
 
 ## models
 
 ### backbones
 
-#### CNN
+#### CNN-based
 - [ResNet](models/backbones/resnet.py)
   - [Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385), (Microsoft), CVPR-2016
   - [Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/abs/1812.01187), (Amazon), CVPR-2019
