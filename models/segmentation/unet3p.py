@@ -50,7 +50,7 @@ class Decoder(nn.Module):
 
 
 class UNet3P(nn.Module):
-    def __init__(self, classes=10, in_channels=3, channel_ratio=1.0):
+    def __init__(self, classes=21, in_channels=3, channel_ratio=1.0):
         super().__init__()
         self.down_sampling = nn.MaxPool2d(kernel_size=2, stride=2)
         self.encoder_1 = Encoder(in_channels, make_divisible(64 * channel_ratio))
@@ -185,5 +185,6 @@ class UNet3P(nn.Module):
 
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
-    model = UNet3P(classes=10, in_channels=3, channel_ratio=1.0)
+    model = UNet3P(classes=21, in_channels=3, channel_ratio=1.0)
     out_data_5, out_data_4, out_data_3, out_data_2, out_data_1 = model(in_data)
+    print(out_data_5.shape, out_data_4.shape, out_data_3.shape, out_data_2.shape, out_data_1.shape)

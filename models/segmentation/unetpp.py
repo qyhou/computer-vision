@@ -56,7 +56,7 @@ class UpSamplingBlock(nn.Module):
 
 
 class UNetPP(nn.Module):
-    def __init__(self, level=4, classes=10, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0):
+    def __init__(self, level=4, classes=21, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0):
         super().__init__()
         self.level = level
 
@@ -147,5 +147,6 @@ class UNetPP(nn.Module):
 
 if __name__ == '__main__':
     in_data = torch.randn(1, 3, 960, 640)  # b, c, h, w
-    model = UNetPP(level=4, classes=10, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0)
+    model = UNetPP(level=4, classes=21, in_channels=3, up_sampling_mode='transpose', channel_ratio=1.0)
     out_data = model(in_data)
+    print(out_data.shape)
